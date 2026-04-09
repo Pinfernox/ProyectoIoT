@@ -1,0 +1,11 @@
+# Archivos de VS Code y Entorno
+*.code-workspace
+.vscode/
+
+# Ignorar basura de Python
+__pycache__/
+*.pyc
+.env
+
+# Ignorar binarios pesados de PlatformIO (Wokwi)
+Wokwi/.pio/

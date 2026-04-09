@@ -1,0 +1,111 @@
+services:
+        
+ mongo-db:
+   image: mongo:${MONGO_DB_VERSION}
+   command: --nojournal
+   networks:
+      default:
+   volumes:
+      - mongo-db:/data
+   ports:
+      - "27017:27017"
+   expose:
+      - "27017"      
+
+ orion:
+   image: fiware/orion:${ORION_VERSION}
+   ports:
+     - "${ORION_PORT}:${ORION_PORT}"
+   command: -dbhost mongo-db
+   networks:
+      default:
+
+ iot-agent-json-mqtt:
+          image: fiware/iotagent-json:${ULTRALIGHT_VERSION}
+          hostname: iot-agent
+          depends_on:
+            - mongo-db
+            - mosquitto
+          networks:
+            default:
+          ports:
+            - "${IOTA_NORTH_PORT}:${IOTA_NORTH_PORT}" # localhost:4041
+          environment:
+            - IOTA_CB_HOST=orion
+            - IOTA_CB_PORT=${ORION_PORT}
+            - IOTA_NORTH_PORT=${IOTA_NORTH_PORT}
+            - IOTA_REGISTRY_TYPE=mongodb
+            - IOTA_LOG_LEVEL=DEBUG
+            - IOTA_TIMESTAMP=true
+            - IOTA_CB_NGSI_VERSION=v2
+            - IOTA_AUTOCAST=true
+            - IOTA_MONGO_HOST=mongo-db
+            - IOTA_MONGO_PORT=${MONGO_DB_PORT}
+            - IOTA_MONGO_DB=iotagentjson
+            - IOTA_PROVIDER_URL=http://iot-agent:${IOTA_NORTH_PORT}
+            - IOTA_MQTT_HOST=mosquitto # Se conecta al broker MQTT local
+            - IOTA_MQTT_PORT=1883 
+            - IOTA_DEFAULT_RESOURCE= 
+
+ mosquitto:
+   image: eclipse-mosquitto:1.6.13
+   hostname: mosquitto
+   container_name: mosquitto
+   networks:
+      default:
+   expose:
+       - "1883"
+       - "9001"
+   ports:
+       - "1883:1883"
+       - "9001:9001"
+   volumes:
+       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+ crate-db:
+    image: crate:${CRATE_VERSION}
+    hostname: crate-db
+    ports:
+        # Admin UI
+        - "4200:4200"
+        # Transport protocol
+        - "4300:4300"
+    command:
+        crate -Cdiscovery.type=single-node 
+    environment:
+        - CRATE_HEAP_SIZE=2g
+    networks:
+      default:
+
+ quantumleap:
+    image: orchestracities/quantumleap:${QUANTUMLEAP_VERSION}
+    hostname: quantumleap
+    ports:
+        - "${QUANTUMLEAP_PORT}:${QUANTUMLEAP_PORT}"
+    depends_on:
+        - crate-db
+    environment:
+        - CRATE_HOST=crate-db
+        - LOGLEVEL=DEBUG
+    networks:
+      default:
+
+ grafana:
+    image: grafana/grafana:8.4.5
+    depends_on:
+        - crate-db
+    ports:
+        - "3003:3000"
+    environment:
+        - GF_INSTALL_PLUGINS=https://github.com/orchestracities/grafana-map-plugin/releases/download/v1.4.2/orchestracities-map-panel-1.4.2.zip;grafana-map-plugin,grafana-clock-panel,grafana-worldmap-panel 
+    networks:
+      default:
+
+
+networks:
+  default:
+    name: iot
+  
+
+volumes:
+ mongo-db: ~ 
