@@ -117,12 +117,13 @@ void loop() {
   int potValue = analogRead(potPin);
   float speed = map(potValue, 0, 4095, 0, 80);
   float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
 
   // 2. Crear Objeto JSON (Solo datos físicos para FIWARE)
-  StaticJsonDocument<200> doc;
-  // Los nombres "speed" y "temp" DEBEN coincidir con el script de aprovisionamiento de Python
+  StaticJsonDocument<250> doc;
   doc["speed"] = speed; 
   doc["temp"] = temp;
+  doc["hum"] = hum;
 
   // 3. Convertir JSON a texto y publicarlo por MQTT
   char jsonBuffer[200];
@@ -140,11 +141,14 @@ void loop() {
   display.println("SISTEMA BUS - MUII");
   display.drawLine(0, 10, 128, 10, WHITE);
   
-  display.setCursor(0,25);
-  display.print("VEL:  "); display.print(speed, 0); display.println(" km/h");
+  display.setCursor(0,15);
+  display.print("VEL: "); display.print(speed, 0); display.println(" km/h");
   
-  display.setCursor(0,45);
-  display.print("TEMP: "); display.print(temp, 1); display.println(" C");
+  display.setCursor(0,27);
+  display.print("TMP: "); display.print(temp, 1); display.println(" C");
+
+  display.setCursor(0,39);
+  display.print("HUM: "); display.print(hum, 0); display.println(" %");
   
   display.display();
 

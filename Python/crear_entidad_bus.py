@@ -10,6 +10,8 @@ json_dict = {
     "vehicleType": { "type": "Text", "value": "bus" },
     "speed": { "type": "Number", "value": 0 },
     "temp": { "type": "Number", "value": 0 },
+    "humidity": { "type": "Number", "value": 0},
+    "passengers": { "type": "Number", "value": 0},
     "location": {
         "type": "geo:json",
         "value": {
