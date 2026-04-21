@@ -8,7 +8,8 @@ headers = {
     'Accept': 'application/json'
 }
 
-url = 'http://localhost:1026/v2/entities/urn:ngsi-ld:Vehicle:Bus_01'
+# Añade ?options=keyValues al final
+url = 'http://localhost:1026/v2/entities/urn:ngsi-ld:Vehicle:Bus_01?options=keyValues'
 
 print("Iniciando Monitor de FIWARE (Habitación 'openiot')...")
 

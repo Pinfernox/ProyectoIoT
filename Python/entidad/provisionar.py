@@ -43,7 +43,8 @@ payload_device = {
                 { "object_id": "speed", "name": "speed", "type": "Number" },
                 { "object_id": "temp", "name": "temp", "type": "Number" },
                 { "object_id": "hum", "name": "humidity", "type": "Number" },
-                { "object_id": "pax", "name": "passengers", "type": "Number" }
+                { "object_id": "passengers", "name": "passengers", "type": "Number" },
+                { "object_id": "location", "name": "location", "type": "geo:json" }
             ]
         }
     ]
