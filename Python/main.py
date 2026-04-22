@@ -35,10 +35,22 @@ def update_bus_location():
     pasajeros_actuales = max(0, min(50, pasajeros_actuales))
 
     try:
-        response_emt = requests.get(URL_MALAGA)
+        # Añadimos un User-Agent para que el servidor de la EMT crea que somos un navegador real
+        headers_web = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        response_emt = requests.get(URL_MALAGA, headers=headers_web)
         
         if response_emt.status_code == 200:
-            datos_emt = response_emt.json()
+            try:
+                # Intentamos convertir la respuesta a JSON
+                datos_emt = response_emt.json()
+            except Exception as e:
+                # Si falla, imprimimos los primeros 200 caracteres de lo que nos ha mandado el servidor
+                print("❌ Error: La EMT no ha devuelto un JSON válido.")
+                print(f"📄 Respuesta cruda del servidor: {response_emt.text[:200]}...")
+                return
+
             # Buscamos el bus que pertenece a la línea 1
             buses_linea_1 = [bus for bus in datos_emt if bus.get('lineNumber') == "1.0"]
             
@@ -49,7 +61,6 @@ def update_bus_location():
                 print(f"👥 Pasajeros a bordo: {pasajeros_actuales}")
                 
                 # --- LÓGICA MQTT ---
-                # Creamos el paquete JSON solo con los datos crudos para el ESP32
                 payload_local = {
                     "lat": lat,
                     "lon": lon,
@@ -63,11 +74,11 @@ def update_bus_location():
             else:
                 print("💤 No hay autobuses de la Línea 1 circulando en este momento.")
         else:
-            print(f"❌ Error de servidor EMT: {response_emt.status_code}")
+            print(f"❌ Error de servidor EMT: Código {response_emt.status_code}")
             
     except Exception as e:
-        print(f"❌ Error de conexión: {e}")
-
+        print(f"❌ Error general de conexión: {e}")
+        
 # ==================== BUCLE PRINCIPAL ====================
 if __name__ == "__main__":
     print(f"=== Proveedor de Datos EMT -> ESP32 Gateway ===")

@@ -209,7 +209,6 @@ void loop() {
   } else {
     display.display(); 
     digitalWrite(ledESP, HIGH); 
-    noTone(buzzerPin);          
     
     // Espera no bloqueante de 2 segundos (Escuchando a MQTT)
     unsigned long startWait = millis();
