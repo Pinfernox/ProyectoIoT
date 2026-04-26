@@ -9,7 +9,7 @@
 // ================= 1. CONFIGURACIÓN DE RED Y FIWARE =================
 const char* ssid = "Original bro";         // <-- ¡Pon aquí tu WiFi!
 const char* password = "pinfernox";      // <-- ¡Pon aquí tu contraseña!
-const char* mqtt_server = "10.133.146.240";   // <-- IP de tu ordenador
+const char* mqtt_server = "10.193.248.240";   // <-- IP de tu ordenador
 const int mqtt_port = 1883;
 
 // Tópicos MQTT
