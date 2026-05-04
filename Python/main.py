@@ -5,7 +5,7 @@ import random
 import paho.mqtt.client as mqtt
 
 # ==================== CONFIGURACIÓN MQTT ====================
-MQTT_BROKER = '127.0.0.1' # o 'localhost'. Así nunca fallará, cambie o no el WiFi. # <-- Tu IP local
+MQTT_BROKER = '34.79.66.20'
 MQTT_PORT = 1883
 MQTT_TOPIC_GPS = "bus/local/position"            # Canal exclusivo para mandar datos al ESP32
 
@@ -31,7 +31,7 @@ def update_bus_location():
     print("\n📡 Buscando posición del autobús de Málaga en vivo...")
     
     # Simular Pasajeros subiendo y bajando
-    pasajeros_actuales += random.randint(-5, 7)
+    pasajeros_actuales += random.randint(-4, 8)
     pasajeros_actuales = max(0, min(50, pasajeros_actuales))
 
     try:
@@ -58,6 +58,11 @@ def update_bus_location():
                 coordenadas = buses_linea_1[0]['location']['coordinates']
                 lon, lat = float(coordenadas[0]), float(coordenadas[1])
                 print(f"🚌 Bus Línea 1 detectado en: [{lon}, {lat}]")
+
+                #lon = float(coordenadas[0]) + 0.02
+                #lat = float(coordenadas[1])
+                #print(f"🚌 Bus Línea 1 (HACKEADO) detectado en: [{lon}, {lat}]")
+
                 print(f"👥 Pasajeros a bordo: {pasajeros_actuales}")
                 
                 # --- LÓGICA MQTT ---
@@ -85,5 +90,5 @@ if __name__ == "__main__":
     
     while True:
         update_bus_location()
-        print("⏳ Esperando 90 segundos para la próxima actualización...")
-        time.sleep(90)
+        print("⏳ Esperando 150 segundos para la próxima actualización...")
+        time.sleep(150)

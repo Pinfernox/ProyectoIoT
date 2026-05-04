@@ -7,23 +7,22 @@
 #include <PubSubClient.h>
 
 // ================= 1. CONFIGURACIÓN DE RED Y FIWARE =================
-const char* ssid = "Original bro";         // <-- ¡Pon aquí tu WiFi!
-const char* password = "pinfernox";      // <-- ¡Pon aquí tu contraseña!
-const char* mqtt_server = "10.193.248.240";   // <-- IP de tu ordenador
+const char* ssid = "Original bro"; // Wifi Local       
+const char* password = "pinfernox";      
+const char* mqtt_server = "34.79.66.20";  
 const int mqtt_port = 1883;
 
 // Tópicos MQTT
 const char* mqtt_topic_pub = "/1234/esp32_bus01/attrs"; // Hacia FIWARE
-const char* mqtt_topic_sub = "bus/local/position";      // Escuchando el GPS (Python 1)
-const char* mqtt_topic_alert = "/1234/esp32_bus01/alert"; // <-- NUEVO: Escuchando Alertas (Python 2)
+const char* mqtt_topic_sub = "bus/local/position";      // Escuchando el GPS 
+const char* mqtt_topic_alert = "/1234/esp32_bus01/alert"; // Escuchando Alertas
 
-// ================= 2. VARIABLES DEL GEMELO DIGITAL =================
-// Guardamos los últimos datos recibidos (les damos un valor inicial realista)
+
 float current_lat = 36.723835; 
 float current_lon = -4.416324;
 int current_passengers = 0;
 
-// ================= 3. CONFIGURACIÓN DE HARDWARE =================
+// ================= CONFIGURACIÓN DE HARDWARE =================
 const int potPin = 34;     
 const int buzzerPin = 5;   
 const int ledESP = 2;      
@@ -38,61 +37,45 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 
-// ================= 4. RECEPCIÓN DE DATOS (NUEVO CALLBACK INTELIGENTE) =================
+// ================= RECEPCIÓN DE DATOS =================
 void callback(char* topic, byte* payload, unsigned int length) {
-  // Convertir el mensaje recibido en un texto (String)
   String incomingMessage = "";
-  for (int i = 0; i < length; i++) {
-    incomingMessage += (char)payload[i];
-  }
+  for (int i = 0; i < length; i++) { incomingMessage += (char)payload[i]; }
   
-  // Imprimir por dónde ha entrado el mensaje
-  Serial.print("📥 Recibido en ["); Serial.print(topic); Serial.print("]: ");
-  Serial.println(incomingMessage);
+  Serial.print("📥 Recibido en ["); Serial.print(topic); Serial.print("]: "); Serial.println(incomingMessage);
 
-  // --- CASO A: VIENE DEL PROVEEDOR GPS ---
   if (String(topic) == mqtt_topic_sub) {
     StaticJsonDocument<200> docRecibido;
     DeserializationError error = deserializeJson(docRecibido, incomingMessage);
-
     if (!error) {
-      current_lat = docRecibido["lat"];
-      current_lon = docRecibido["lon"];
-      current_passengers = docRecibido["passengers"];
-      Serial.println("✅ Posición y pasajeros actualizados en memoria.");
-    } else {
-      Serial.println("❌ Error al leer el JSON de Python");
+      current_lat = docRecibido["lat"]; current_lon = docRecibido["lon"]; current_passengers = docRecibido["passengers"];
     }
   } 
-  
-  // --- CASO B: VIENE DE LA CENTRALITA (ALERTAS) ---
   else if (String(topic) == mqtt_topic_alert) {
-    display.clearDisplay();
-    display.setTextSize(2);
-    display.setTextColor(WHITE);
-    display.setCursor(0, 20);
+    display.clearDisplay(); display.setTextSize(2); display.setTextColor(WHITE); display.setCursor(0, 15);
 
+    // ALERTA 1: AFORO SUPERADO 
     if (incomingMessage == "LLENO") {
-      display.println("BUS LLENO!");
-      display.display();
-      // Alarma aguda y rápida
-      tone(buzzerPin, 2000, 150); delay(200);
-      tone(buzzerPin, 2000, 150); delay(200);
-      tone(buzzerPin, 2000, 150);
+      display.println("AFORO\nCOMPLETO!"); display.display();
+      tone(buzzerPin, 2000, 150); delay(200); tone(buzzerPin, 2000, 150); delay(200); tone(buzzerPin, 2000, 150);
     } 
-    else if (incomingMessage == "DESVIO") {
-      display.println("DESVIO RUTA");
-      display.display();
-      // Alarma grave y sostenida
-      tone(buzzerPin, 300, 1000); 
+    // ALERTA 2: DESVÍO POR ERROR 
+    else if (incomingMessage == "DESVIO_ERROR") {
+      display.println("!FUERA\nDE RUTA!"); display.display();
+      tone(buzzerPin, 200, 1200); 
+    }
+    // ALERTA 3: OBRAS 
+    else if (incomingMessage == "DESVIO_OBRAS") {
+      display.println("AVISO:\nOBRAS!"); display.display();
+      tone(buzzerPin, 800, 300); delay(300); tone(buzzerPin, 600, 300); delay(300); tone(buzzerPin, 800, 300);
     }
     
-    delay(1500); // Dejar el mensaje en pantalla un momento
+    delay(2500); 
   }
 }
 
 
-// ================= 5. FUNCIONES DE CONEXIÓN =================
+// ================= FUNCIONES DE CONEXIÓN =================
 void setup_wifi() {
   delay(10);
   WiFi.mode(WIFI_STA);
@@ -112,18 +95,19 @@ void reconnect() {
     if (client.connect("ESP32Client-Bus01")) {
       Serial.println("✅ Conectado!");
       digitalWrite(ledESP, LOW); 
-      
-      // <-- NUEVO: Nos suscribimos a LOS DOS canales
       client.subscribe(mqtt_topic_sub);
       client.subscribe(mqtt_topic_alert);
     } else {
+      Serial.print("❌ Falló, código de error: ");
+      Serial.print(client.state());
+      Serial.println(" -> Intentando de nuevo en 5 seg");
       delay(5000);
     }
   }
 }
 
 
-// ================= 6. ARRANQUE DEL SISTEMA =================
+// ================= ARRANQUE DEL SISTEMA =================
 void setup() {
   Serial.begin(115200);
   pinMode(buzzerPin, OUTPUT);
@@ -145,14 +129,12 @@ void setup() {
 }
 
 
-// ================= 7. BUCLE PRINCIPAL =================
 void loop() {
   if (!client.connected()) {
     reconnect();
   }
-  client.loop(); // <- Muy importante para mantener vivo el MQTT
+  client.loop(); 
 
-  // --- LECTURA FÍSICA ---
   float speed = map(analogRead(potPin), 0, 4095, 0, 80);
   float temp = dht.readTemperature();
   float hum = dht.readHumidity();
@@ -190,27 +172,27 @@ void loop() {
   display.setCursor(0,20); display.printf("VEL: %.0f km/h", speed);
   display.setCursor(0,35); display.printf("TMP: %.1f C\n", temp);
   
-  // Mostramos también los pasajeros en la pantalla
   display.setCursor(0,50); display.printf("PASAJEROS: %d\n", current_passengers); 
 
-  // --- LÓGICA DE ALARMAS Y ESPERAS INTELIGENTES ---
+  // --- LÓGICA DE ALARMAS ---
+  // ALERTA 4: EXCESO DE VELOCIDAD 
   if(speed > 60) {
-    display.setCursor(85, 20); display.print("!ALERTA!"); 
+    display.setCursor(85, 20); display.print("!EXCESO!"); 
     display.display(); 
-    tone(buzzerPin, 440, 500); 
     
-    digitalWrite(ledESP, HIGH); delay(150); digitalWrite(ledESP, LOW); delay(150);
-    digitalWrite(ledESP, HIGH); delay(150); digitalWrite(ledESP, LOW); delay(150);
+    tone(buzzerPin, 1000, 150); delay(150);
+    tone(buzzerPin, 1000, 150); delay(150);
     
-    // Espera no bloqueante (Escuchando a MQTT)
+    digitalWrite(ledESP, HIGH); delay(100); digitalWrite(ledESP, LOW); delay(100);
+    digitalWrite(ledESP, HIGH); delay(100); digitalWrite(ledESP, LOW); delay(100);
+    
     unsigned long startWait = millis();
-    while(millis() - startWait < 1400) { client.loop(); delay(10); }
+    while(millis() - startWait < 800) { client.loop(); delay(10); }
 
   } else {
     display.display(); 
     digitalWrite(ledESP, HIGH); 
     
-    // Espera no bloqueante de 2 segundos (Escuchando a MQTT)
     unsigned long startWait = millis();
     while(millis() - startWait < 2000) { client.loop(); delay(10); }
   }

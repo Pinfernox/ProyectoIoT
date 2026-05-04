@@ -7,7 +7,7 @@ from shapely.geometry import Point, LineString, MultiLineString
 app = Flask(__name__)
 
 # ==================== CONFIGURACIÓN ====================
-MQTT_BROKER = '10.193.248.240' # <--- Puesto igual que el ESP32
+MQTT_BROKER = '34.79.66.20' 
 MQTT_PORT = 1883
 TOPIC_ESCUCHA = "/1234/esp32_bus01/attrs"
 TOPIC_ALERTA = "/1234/esp32_bus01/alert"
@@ -19,10 +19,9 @@ ultimo_estado = {
     "lon": 0, "lat": 0, "alerta": "OK"
 }
 
-# Cambiamos el nombre por si el antiguo Python sigue corriendo de fondo
 mqtt_client = mqtt.Client("Central_Web_Dashboard_V2")
 
-# ==================== LÓGICA GEOFENCING Y MQTT ====================
+# ==================== LÓGICA Y MQTT ====================
 def cargar_rutas_geojson(archivo='linea1.geojson'):
     try:
         with open(archivo, 'r', encoding='utf-8') as f:
@@ -34,7 +33,6 @@ def cargar_rutas_geojson(archivo='linea1.geojson'):
         pass
     return None
 
-# Usamos *args para que no dé error importe la versión de Paho-MQTT que tengas
 def on_connect(client, userdata, flags, *args):
     print(f"🔌 Conectado al Broker. Suscribiendo al canal: {TOPIC_ESCUCHA}...")
     client.subscribe(TOPIC_ESCUCHA)
@@ -43,12 +41,10 @@ def on_message(client, userdata, msg):
     global ultimo_estado
     try:
         payload_str = msg.payload.decode('utf-8')
-        # ¡CHIVATO! Imprimirá en la consola de Python cada vez que el ESP32 hable
         print(f"📥 DATO CAZADO POR LA CENTRAL: {payload_str}")
         
         datos = json.loads(payload_str)
         
-        # Actualizamos el estado
         ultimo_estado["speed"] = datos.get("speed", 0)
         ultimo_estado["temp"] = datos.get("temp", 0)
         ultimo_estado["hum"] = datos.get("hum", 0)
@@ -70,13 +66,13 @@ def on_message(client, userdata, msg):
         if ruta_maestra is not None:
             distancia = Point(lon, lat).distance(ruta_maestra) * 111139
             if distancia > LIMITE_DESVIO_METROS:
-                ultimo_estado["alerta"] = f"DESVÍO ({int(distancia)}m)"
-                client.publish(TOPIC_ALERTA, "DESVIO")
+                ultimo_estado["alerta"] = f"FUERA DE RUTA ({int(distancia)}m)"
+                client.publish(TOPIC_ALERTA, "DESVIO_ERROR")
                 
     except Exception as e:
         print(f"❌ Error procesando JSON: {e}")
 
-# ==================== RUTAS WEB (FLASK) ====================
+# ==================== RUTAS WEB ====================
 @app.route('/')
 def index():
     return render_template('index.html')

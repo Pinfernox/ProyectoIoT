@@ -58,10 +58,9 @@
             
             <div class="col-md-4">
                 <div class="card p-3">
-                    <h5>Control Manual ESP32</h5>
-                    <p class="text-white small">Mandar órdenes físicas al autobús.</p>
-                    <button class="btn btn-danger mb-2" onclick="mandarAlerta('LLENO')">📢 Forzar Alarma Lleno</button>
-                    <button class="btn btn-warning mb-2" onclick="mandarAlerta('DESVIO')">🗺️ Forzar Alarma Desvío</button>
+                    <h5 class="text-white">Control Manual ESP32</h5>
+                    <p class="text-white small">Notificar incidencias al conductor.</p>
+                    <button class="btn btn-warning mb-2" onclick="mandarAlerta('DESVIO_OBRAS')">🚧 Avisar: Desvío por Obras</button>
                 </div>
                 <div class="card p-3 text-center">
                     <h5>GPS Actual</h5>
@@ -72,7 +71,6 @@
     </div>
 
     <script>
-        // Configuración de la gráfica
         const ctx = document.getElementById('graficaVelocidad').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'line',
@@ -80,19 +78,16 @@
             options: { scales: { y: { beginAtZero: true, max: 100 } } }
         });
 
-        // Función para consultar los datos a Python cada 1 segundo
         setInterval(() => {
             fetch('/api/datos')
                 .then(response => response.json())
                 .then(data => {
-                    // 1. Actualizar números
                     document.getElementById('valVel').innerText = data.speed;
                     document.getElementById('valPax').innerText = data.passengers;
                     document.getElementById('valTemp').innerText = parseFloat(data.temp).toFixed(2);
                     document.getElementById('valHum').innerText = data.hum;
                     document.getElementById('valGPS').innerText = `[${data.lon.toFixed(4)}, ${data.lat.toFixed(4)}]`;
 
-                    // 2. Comprobar Alertas Automáticas
                     const caja = document.getElementById('cajaAlerta');
                     if (data.alerta !== "OK") {
                         caja.style.display = "block";
@@ -101,7 +96,6 @@
                         caja.style.display = "none";
                     }
 
-                    // 3. Actualizar Gráfica
                     const horaActual = new Date().toLocaleTimeString();
                     if(chart.data.labels.length > 15) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
                     chart.data.labels.push(horaActual);
@@ -110,7 +104,6 @@
                 });
         }, 1000);
 
-        // Función para los botones manuales
         function mandarAlerta(orden) {
             fetch('/api/alerta', {
                 method: 'POST',

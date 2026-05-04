@@ -10,7 +10,7 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-# 1. Crear el Grupo de Servicio (Definir la API Key '1234')
+# Crear el Grupo de Servicio 
 payload_service = {
     "services": [
         {
@@ -29,7 +29,7 @@ if resp_service.status_code == 201 or resp_service.status_code == 409:
 else:
     print(f" ❌ Error Servicio: {resp_service.text}")
 
-# 2. Registrar el Dispositivo ESP32
+# Registrar el Dispositivo ESP32
 payload_device = {
     "devices": [
         {
