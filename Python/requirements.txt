@@ -1,3 +1,4 @@
 requests
 shapely
 flask
+azure-iot-device
