@@ -3,6 +3,7 @@ import threading
 from flask import Flask, render_template, jsonify, request
 import paho.mqtt.client as mqtt
 from shapely.geometry import Point, LineString, MultiLineString
+import azure_uploader
 
 app = Flask(__name__)
 
@@ -98,6 +99,8 @@ if __name__ == "__main__":
         mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
         mqtt_client.loop_start() 
         print("🚀 Levantando Dashboard Web en http://10.193.248.240:5000")
+        azure_uploader.SIMULATE = False          # use real ESP32 data
+        azure_uploader.start_background()
         app.run(host='0.0.0.0', port=5000, debug=False)
     except Exception as e:
         print(f"❌ Error de red al iniciar: {e}")
