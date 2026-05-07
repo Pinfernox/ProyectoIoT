@@ -55,10 +55,12 @@ def update_bus_location():
                 coordenadas = buses_linea_1[0]['location']['coordinates']
                 lon, lat = float(coordenadas[0]), float(coordenadas[1])
 
+
                 if lon != ultima_lon or lat != ultima_lat:
                     print(f"🚌 Bus Línea 1 EN MOVIMIENTO detectado en: [{lon}, {lat}]")
                     pasajeros_actuales += random.randint(-4, 8)
-                    pasajeros_actuales = max(0, min(50, pasajeros_actuales))
+                    #pasajeros_actuales = max(0, min(50, pasajeros_actuales))
+                    pasajeros_actuales = 50
                     ultima_lon = lon
                     ultima_lat = lat
                 else:
@@ -91,5 +93,5 @@ if __name__ == "__main__":
     
     while True:
         update_bus_location()
-        print("⏳ Esperando 180 segundos para la próxima actualización...")
-        time.sleep(180)
+        print("⏳ Esperando 10 segundos para la próxima actualización...")
+        time.sleep(10)

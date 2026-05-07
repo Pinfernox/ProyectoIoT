@@ -53,7 +53,8 @@ def update_bus_location():
             
             if buses_linea_1:
                 coordenadas = buses_linea_1[0]['location']['coordinates']
-                lon, lat = float(coordenadas[0]), float(coordenadas[1])
+                #lon, lat = float(coordenadas[0]), float(coordenadas[1])
+                lon, lat = float(coordenadas[0]) + 0.02, float(coordenadas[1])                
 
                 if lon != ultima_lon or lat != ultima_lat:
                     print(f"🚌 Bus Línea 1 EN MOVIMIENTO detectado en: [{lon}, {lat}]")
@@ -91,5 +92,5 @@ if __name__ == "__main__":
     
     while True:
         update_bus_location()
-        print("⏳ Esperando 180 segundos para la próxima actualización...")
-        time.sleep(180)
+        print("⏳ Esperando 10 segundos para la próxima actualización...")
+        time.sleep(10)

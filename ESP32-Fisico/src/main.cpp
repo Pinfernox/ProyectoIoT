@@ -177,8 +177,10 @@ void loop() {
   // --- LÓGICA DE ALARMAS ---
   // ALERTA 4: EXCESO DE VELOCIDAD 
   if(speed > 60) {
-    display.setCursor(85, 20); display.print("!EXCESO!"); 
-    display.display(); 
+    display.clearDisplay(); display.setTextSize(2); display.setTextColor(WHITE); display.setCursor(0, 15);
+    display.println("!EXCESO\nVELOCIDAD!"); 
+    display.display();
+    
     
     tone(buzzerPin, 1000, 150); delay(150);
     tone(buzzerPin, 1000, 150); delay(150);

@@ -7,13 +7,14 @@ import paho.mqtt.client as mqtt
 MQTT_BROKER = '34.79.66.20'  
 MQTT_PORT = 1883
 TOPIC_ESCUCHA = "/1234/esp32_bus01/attrs"
+PROJECT_ID = 'elite-campus-491317-c2'
 
 DATASET_ID = 'midataset'  
 TABLE_ID = 'tablaBus'      
 
 # ==================== CONEXIÓN A BIGQUERY ====================
 print("⏳ Conectando a Google BigQuery...")
-bigquery_client = bigquery.Client() 
+bigquery_client = bigquery.Client(project=PROJECT_ID) # <--- MODIFICA ESTA LÍNEA 
 table_ref = bigquery_client.dataset(DATASET_ID).table(TABLE_ID)
 table = bigquery_client.get_table(table_ref)
 print("✅ Conectado a BigQuery con éxito.")
